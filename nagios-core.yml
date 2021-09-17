@@ -1,0 +1,340 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  CloudFormation Template for Nagios on EC2.
+Parameters:
+  NagiosPassword:
+    AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Default: 'nagiosadmin'
+    Type: String
+  Email:
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Default: 'drmehmet510@gmail.com'
+    Type: String 
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.small
+      - t2.micro
+      - m1.small
+      - m1.medium
+      - m1.large
+    ConstraintDescription: must be a valid EC2 instance type.
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings:
+  RegionImageMap:
+    us-east-1:
+      AMI: ami-0c94855ba95c71c99
+    us-east-2:
+      AMI: ami-0603cbe34fd08cb81
+    us-west-1:
+      AMI: ami-0e65ed16c9bf1abc7
+    us-west-2:
+      AMI: ami-0841edc20334f9287
+    eu-west-1:
+      AMI: ami-08a2aed6e0a6f9c7d
+Resources:
+  NagiosServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: 'Nagios Server Access Security Group'
+      GroupDescription: 'Nagios Server Access Security Group'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5666'
+          ToPort: '5666'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '12489'
+          ToPort: '12489'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: Server RulesInbound
+  NagiosHostRedhatSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: 'Nagios Host Redhat Access Security Group'
+      GroupDescription: 'Nagios Host redhat Access Security Group'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5666'
+          ToPort: '5666'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: Server RulesInbound
+  NagiosHostUbuntuSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: 'Nagios Host Ubuntu Access Security Group'
+      GroupDescription: 'Nagios Host Ubuntu  Access Security Group'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5666'
+          ToPort: '5666'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: Server RulesInbound
+  NagiosWinHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: 'Nagios Hostwin Access Security Group'
+      GroupDescription: 'Nagios Hostwin  Access Security Group'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5666'
+          ToPort: '5666'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '12489'
+          ToPort: '12489'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '3389'
+          ToPort: '3389'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: Server RulesInbound
+  NagiosServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nagios-server
+      UserData:
+        Fn::Base64: 
+          !Sub 
+            - |
+              #!/bin/bash
+              #disable selinux
+              sudo sed -i 's/enforcing/disabled/g' /etc/selinux/config
+              #config hostname
+              hostname nagios
+              echo "nagios" >/etc/hostname
+              yum update -y
+              amazon-linux-extras install epel -y
+              yum install httpd php gcc glibc glibc-common gd gd-devel openssl-devel make net-snmp -y
+              systemctl start httpd
+              systemctl enable httpd 
+              yum install wget -y
+              adduser -m nagios
+              echo ${NagiosPassword} | passwd nagios --stdin
+              groupadd nagcmd
+              usermod -a -G nagcmd nagios
+              usermod -a -G nagcmd apache
+              mkdir -p /home/ec2-user/nagios && cd /home/ec2-user/nagios
+              wget http://prdownloads.sourceforge.net/sourceforge/nagios/nagios-4.4.6.tar.gz
+              wget http://nagios-plugins.org/download/nagios-plugins-2.3.3.tar.gz
+              tar zxvf nagios-4.4.6.tar.gz
+              cd /home/ec2-user/nagios/nagios-4.4.6 &&  ./configure --with-command-group=nagcmd
+              make all
+              make install
+              make install-init
+              make install-config
+              make install-commandmode
+              cp -R contrib/eventhandlers/ /usr/local/nagios/libexec/
+              chown -R nagios:nagios /usr/local/nagios/libexec/eventhandlers
+              sed -i 's|nagios@localhost|${Email}|g' /usr/local/nagios/etc/objects/contacts.cfg
+              make install-webconf
+              htpasswd -b -c /usr/local/nagios/etc/htpasswd.users nagiosadmin ${NagiosPassword}
+              service httpd restart
+              yum install nagios-plugins-snmp -y
+              yum install perl-Net-SNMP -y
+              cd /home/ec2-user/nagios && tar zxvf nagios-plugins-2.3.3.tar.gz 
+              cd /home/ec2-user/nagios/nagios-plugins-2.3.3 && ./configure --with-nagios-user=nagios --with-nagios-group=nagios
+              make && make install
+              chkconfig --add nagios
+              chkconfig nagios on
+              service nagios start
+
+              #Nrpe-check
+              cd /home/ec2-user/nagios
+              wget https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-4.0.2/nrpe-4.0.2.tar.gz
+              tar xzf nrpe-4.0.2.tar.gz && cd /home/ec2-user/nagios/nrpe-4.0.2 && ./configure
+              make all && make install-plugin
+
+              cd /usr/local/nagios/etc/objects/
+              cp localhost.cfg redhat.cfg
+              cp localhost.cfg ubuntu.cfg
+              cp windows.cfg windows10.cfg
+
+              echo $(route -n) > routerip.txt
+              ROUTERIP=$(cat routerip.txt | awk '{print $14}')
+
+              sed -i "s/linksys-srw224p/router/g" switch.cfg
+              sed -i "s/192.168.1.253/$ROUTERIP/g" switch.cfg
+              #sed -i "s/public/recommunity public ${NAGIOSSERVERIP}/g" /etc/snmp/snmpd.conf
+              #service snmpd restart
+              #chkconfig snmpd on
+
+              sed -i "s/localhost/redhat/g" redhat.cfg
+              sed -i "s/127.0.0.1/${REDHAT}/g" redhat.cfg
+              sed -i '41,46d' redhat.cfg
+
+              sed -i "s/localhost/ubuntu/g" ubuntu.cfg
+              sed -i "s/127.0.0.1/${UBUNTU}/g" ubuntu.cfg
+              sed -i '41,46d' ubuntu.cfg
+              
+              sed -i "s/winserver/windows10/g" windows10.cfg
+              sed -i "s/192.168.1.2/${WIN}/g" windows10.cfg
+              sed -i "s/Explorer.exe/explorer.exe/g" windows10.cfg
+
+              sed -i '36icfg_file=/usr/local/nagios/etc/objects/redhat.cfg' /usr/local/nagios/etc/nagios.cfg
+              sed -i '37icfg_file=/usr/local/nagios/etc/objects/ubuntu.cfg' /usr/local/nagios/etc/nagios.cfg
+              sed -i '39icfg_file=/usr/local/nagios/etc/objects/windows10.cfg' /usr/local/nagios/etc/nagios.cfg
+              sed -i '42icfg_file=/usr/local/nagios/etc/objects/switch.cfg' /usr/local/nagios/etc/nagios.cfg
+              service nagios restart
+            - REDHAT: !GetAtt NagiosHostRedhat.PublicIp
+              WIN: !GetAtt NagiosHostWindows.PublicIp
+              UBUNTU: !GetAtt NagiosHostUbuntu.PublicIp
+
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap 
+        - RegionImageMap
+        - !Ref AWS::Region
+        - AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !GetAtt NagiosServerSecurityGroup.GroupId
+  
+  NAGIOSSERVERIP:
+    Type: AWS::EC2::EIP
+  IPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref 'NagiosServer'
+      EIP: !Ref 'NAGIOSSERVERIP'
+
+  NagiosHostRedhat:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nagios-host-redhat
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+          yum -y install nagios-nrpe
+          chkconfig --level 2345 nrpe on
+          sed -i '/allowed_hosts=127.0.0.1,::1/s/$/,${NAGIOSSERVERIP}/' /etc/nagios/nrpe.cfg
+          service nrpe start
+          dnf install net-tools -y
+      KeyName: !Ref KeyName  #netstat -an |grep 5666
+      ImageId: ami-0b0af3577fe5e3532
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !GetAtt NagiosHostRedhatSecurityGroup.GroupId
+  NagiosHostUbuntu:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nagios-host-ubuntu
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update && apt-get upgrade -y
+          apt install nagios-nrpe-server nagios-plugins -y
+          chkconfig --level 2345 nrpe on
+          sed -i '/allowed_hosts=127.0.0.1,::1/s/$/,${NAGIOSSERVERIP}/' /etc/nagios/nrpe.cfg
+          systemctl ststus nagios-nrpe-server.service
+      KeyName: !Ref KeyName  #netstat -an |grep 5666
+      ImageId: ami-0747bdcabd34c712a
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !GetAtt NagiosHostUbuntuSecurityGroup.GroupId
+  NagiosHostWindows:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nagios-host-windows
+      KeyName: !Ref KeyName  
+      ImageId: ami-029bfac3973c1bda1
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !GetAtt NagiosWinHostSecurityGroup.GroupId
+ 
+Outputs:
+  IPNagiosCore:
+    Description: Nagios Server IP
+    Value: !Join [ "", [ 'http://',!GetAtt NagiosServer.PublicIp, '/nagios/' ]]
