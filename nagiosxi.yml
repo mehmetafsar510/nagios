@@ -201,19 +201,11 @@ Resources:
           chkconfig --add nagios
           chkconfig nagios on
 
-          #install nagios log server
-          #export PATH=$PATH:/usr/bin
-          #yum -y install epel-release
-          #yum -y update
-          #cd /tmp/ &&
-          #wget https://assets.nagios.com/downloads/nagios-log-server/nagioslogserver-latest.tar.gz &&
-          #tar -zxf nagioslogserver-latest.tar.gz &&
-          #cd /tmp/nagioslogserver/ &&
-          #./fullinstall -m -n &&
-
-          # Disable iptables
-          #iptables -F
-          #service iptables stop
+          # apache configuration for https redirect
+          #echo "RewriteEngine On" >>/etc/httpd/conf/httpd.conf
+          #echo "RewriteCond %{HTTPS} off" >>/etc/httpd/conf/httpd.conf
+          #echo "RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]" >>/etc/httpd/conf/httpd.conf
+          #systemctl restart httpd
 
       KeyName: !Ref KeyName
       ImageId: ami-001986d37ece5b4ab #ami-0001378efdafd5401
