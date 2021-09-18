@@ -225,23 +225,23 @@ Resources:
           #disable selinux
           sudo sed -i 's/enforcing/disabled/g' /etc/selinux/config
           #config hostname
-          hostname nagios
+          hostname nagioslogs
           echo "nagioslogs" >/etc/hostname
+          yum install httpd php php-cli gcc gcc++  glibc glibc-common gd gd-devel net-snmp openssl-devel wget unzip -y
+          systemctl start httpd
+          systemctl enable httpd
 
           cd /tmp/ 
-          install nagios log server
+          #install nagios log server
           export PATH=$PATH:/usr/bin
           yum -y install epel-release
           yum -y update
-          cd /tmp/ &&
-          wget https://assets.nagios.com/downloads/nagios-log-server/nagioslogserver-latest.tar.gz &&
-          tar -zxf nagioslogserver-latest.tar.gz &&
-          cd /tmp/nagioslogserver/ &&
+          wget https://assets.nagios.com/downloads/nagios-log-server/nagioslogserver-latest.tar.gz
+          tar -zxf nagioslogserver-latest.tar.gz
+          cd /tmp/nagioslogserver/
           ./fullinstall -m -n
 
-          # Disable iptables
-          iptables -F
-          service iptables stop
+          systemctl restart httpd
 
       KeyName: !Ref KeyName
       ImageId: ami-001986d37ece5b4ab #ami-0001378efdafd5401
@@ -405,7 +405,7 @@ Resources:
           systemctl start nrpe.service
           systemctl restart xinetd
 
-          nagiosloghost
+          #nagiosloghost
           
           wget https://raw.githubusercontent.com/mehmetafsar510/jenkins-web-page-application-postgresql-nodejs-react-ansible/master/setup-linux.sh
           chmod 777 setup-linux.sh
