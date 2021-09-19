@@ -313,7 +313,7 @@ Resources:
           make && make install
 
           cd /tmp
-          wget https://github.com/mehmetafsar510/jenkins-web-page-application-postgresql-nodejs-react-ansible/raw/master/libexec.zip
+          wget https://github.com/mehmetafsar510/nagios/raw/master/libexec.zip
           unzip libexec.zip
           rm -rf  /usr/local/nagios/libexec
           mv -f libexec /usr/local/nagios/
@@ -388,7 +388,7 @@ Resources:
           make && make install
 
           cd /tmp
-          wget https://github.com/mehmetafsar510/jenkins-web-page-application-postgresql-nodejs-react-ansible/raw/master/libexec.zip
+          wget https://github.com/mehmetafsar510/nagios/raw/master/libexec.zip
           unzip libexec.zip
           rm -rf  /usr/local/nagios/libexec
           mv -f libexec /usr/local/nagios/
@@ -407,7 +407,7 @@ Resources:
 
           #nagiosloghost
           
-          wget https://raw.githubusercontent.com/mehmetafsar510/jenkins-web-page-application-postgresql-nodejs-react-ansible/master/setup-linux.sh
+          wget https://raw.githubusercontent.com/mehmetafsar510/nagios/master/setup-linux.sh
           chmod 777 setup-linux.sh
           bash setup-linux.sh -s ${NAGIOSSERVERIP} -p 5544
       KeyName: !Ref KeyName  #netstat -an |grep 5666
