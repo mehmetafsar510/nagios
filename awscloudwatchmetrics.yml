@@ -1,0 +1,54 @@
+https://github.com/level23/nagios-cloudwatch-metrics
+
+Give nagios server to role
+
+yum intall jq -y
+
+cat >> /usr/local/nagios/etc/objects/commands.cfg<< 'EOF'
+define command {
+	command_name	check_aws_ec2
+	command_line	$USER1$/nagios-cloudwatch-metrics/check_cloudwatch.sh --timeout=30 --region=us-east-1 --namespace="EC2" --metric="$ARG1$" --statistics="$ARG2$" --mins="$ARG3$" --dimensions="Name=InstanceId,Value=$HOSTALIAS$" --warning=$ARG4$ --critical=$ARG5$
+}
+EOF
+
+cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+define service {
+    use                            generic-service         ; Name of service template to use
+    host_name                      ubuntu
+    service_description            CPU Usage
+    check_command                  check_aws_ec2!CPUUtilization!Average!50!80
+    max_check_attempts             5
+
+}
+EOF
+command.cfg Entry: 
+
+define command {
+	command_name	check_aws_ec2
+	command_line	$USER1$/nagios-cloudwatch-metrics/check_cloudwatch.sh --timeout=30 --region="$HOSTNOTES$" --namespace="EC2" --metric="$ARG1$" --statistics="$ARG2$" --mins="$ARG3$" --dimensions="Name=InstanceId,Value=$HOSTALIAS$" --warning=$ARG4$ --critical=$ARG5$
+}
+
+
+
+Sample ubuntu.cfg:
+
+
+###############################################################################
+###############################################################################
+#
+# SERVICE DEFINITIONS
+#
+###############################################################################
+###############################################################################
+
+
+# Define a service AWS Cloud Instance
+
+define service {
+    use                            generic-service         ; Name of service template to use
+    host_name                      ubuntu
+    service_description            CPU Usage
+    check_command                  check_aws_ec2!CPUUtilization!Average!50!80
+    max_check_attempts             5
+
+}

@@ -190,7 +190,7 @@ Resources:
               echo "nagios" >/etc/hostname
               yum update -y
               amazon-linux-extras install epel -y
-              yum install httpd php gcc glibc glibc-common gd gd-devel openssl-devel make net-snmp -y
+              yum install httpd php gcc glibc glibc-common gd gd-devel openssl-devel make net-snmp jq -y
               systemctl start httpd
               systemctl enable httpd 
               yum install wget -y
@@ -316,7 +316,7 @@ Resources:
           apt install nagios-nrpe-server nagios-plugins -y
           chkconfig --level 2345 nrpe on
           sed -i '/allowed_hosts=127.0.0.1,::1/s/$/,${NAGIOSSERVERIP}/' /etc/nagios/nrpe.cfg
-          systemctl ststus nagios-nrpe-server.service
+          systemctl restart nagios-nrpe-server.service
       KeyName: !Ref KeyName  #netstat -an |grep 5666
       ImageId: ami-0747bdcabd34c712a
       InstanceType: !Ref InstanceType
