@@ -172,12 +172,34 @@ Resources:
       Tags:
         - Key: Name
           Value: Server RulesInbound
+  NagiosRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess 
+  NagiosInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref NagiosRole
   NagiosServer:
     Type: AWS::EC2::Instance
     Properties:
       Tags:
         - Key: Name
           Value: nagios-server
+      IamInstanceProfile: !Ref NagiosInstanceProfile
       UserData:
         Fn::Base64: 
           !Sub 
@@ -251,10 +273,45 @@ Resources:
               sed -i "s/localhost/ubuntu/g" ubuntu.cfg
               sed -i "s/127.0.0.1/${UBUNTU}/g" ubuntu.cfg
               sed -i '41,46d' ubuntu.cfg
+
+              #Aws-Cloudwatch-metrics
+              sh -c "cat >> /usr/local/nagios/etc/objects/commands.cfg<< 'EOF'
+              define command {
+              	  command_name	check_aws_ec2
+              	  command_line	$USER1$/check_cloudwatch.sh --timeout=30 --region=us-east-1 --namespace="EC2" --metric="$ARG1$" --statistics="$ARG2$" --mins=3 --dimensions="Name=InstanceId,Value=${NagiosHostUbuntu}" --warning=$ARG3$ --critical=$ARG4$
+              }
+              EOF"
+
+              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              define service {
+                  use                            local-service         ; Name of service template to use
+                  host_name                      ubuntu
+                  service_description            CPU Usage
+                  check_command                  check_aws_ec2!CPUUtilization!Average!50!80
+                  max_check_attempts             5
+
+              }
+              EOF"
+
+              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              define service {
+                  use                            local-service         ; Name of service template to use
+                  host_name                      ubuntu
+                  service_description            Network
+                  check_command                  check_aws_ec2!NetworkIn!Average!300!600
+                  max_check_attempts             5
+
+              }
+              EOF"
               
               sed -i "s/winserver/windows10/g" windows10.cfg
               sed -i "s/192.168.1.2/${WIN}/g" windows10.cfg
               sed -i "s/Explorer.exe/explorer.exe/g" windows10.cfg
+
+              cd /usr/local/nagios/libexec
+              wget https://raw.githubusercontent.com/mehmetafsar510/nagios/master/nagios-cloudwatch-metrics/check_cloudwatch.sh
+              chown nagios:nagios check_cloudwatch.sh
+              chmod 755 check_cloudwatch.sh 
 
               sed -i '36icfg_file=/usr/local/nagios/etc/objects/redhat.cfg' /usr/local/nagios/etc/nagios.cfg
               sed -i '37icfg_file=/usr/local/nagios/etc/objects/ubuntu.cfg' /usr/local/nagios/etc/nagios.cfg
