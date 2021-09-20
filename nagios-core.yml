@@ -275,12 +275,9 @@ Resources:
               sed -i '41,46d' ubuntu.cfg
 
               #Aws-Cloudwatch-metrics
-              sh -c '''cat >> /usr/local/nagios/etc/objects/commands.cfg<< 'EOF'
-              define command {
-              	  command_name	check_aws_ec2
-              	  command_line	'$USER1$'/check_cloudwatch.sh --timeout=30 --region=us-east-1 --namespace="EC2" --metric='$ARG1$' --statistics='$ARG2$' --mins=15 --dimensions="Name=InstanceId,Value=${NagiosHostUbuntu}" --warning='$ARG3$' --critical='$ARG4$'
-              }
-              EOF'''
+              wget https://raw.githubusercontent.com/mehmetafsar510/nagios/master/nagios-cloudwatch-metrics/command.txt
+              sh -c "cat command.txt >> commands.cfg"
+              sed -i "s/{NagiosHostUbuntu}/${NagiosHostUbuntu}/g" /usr/local/nagios/etc/objects/commands.cfg
 
               sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
               define service {
