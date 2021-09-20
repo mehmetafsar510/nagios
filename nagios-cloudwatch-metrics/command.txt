@@ -1,0 +1,4 @@
+define command {
+          command_name  check_aws_ec2
+          command_line  $USER1$/check_cloudwatch.sh --timeout=30 --region=us-east-1 --namespace="EC2" --metric="$ARG1$" --statistics="$ARG2$" --mins=15 --dimensions="Name=InstanceId,Value={NagiosHostUbuntu}" --warning=$ARG3$ --critical=$ARG4$
+}
