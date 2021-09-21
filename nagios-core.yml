@@ -15,7 +15,16 @@ Parameters:
     MaxLength: '41'
     MinLength: '8'
     Default: 'drmehmet510@gmail.com'
-    Type: String 
+    Type: String
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Default: 'nagiosadmin'
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters. 
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
@@ -61,6 +70,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
           CidrIp: '0.0.0.0/0'
         - IpProtocol: tcp
           FromPort: '5666'
@@ -212,6 +225,7 @@ Resources:
               echo "nagios" >/etc/hostname
               yum update -y
               amazon-linux-extras install epel -y
+              yum install perl-DBD-MySQL -y
               yum install httpd php gcc glibc glibc-common gd gd-devel openssl-devel make net-snmp jq -y
               systemctl start httpd
               systemctl enable httpd 
@@ -251,6 +265,15 @@ Resources:
               wget https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-4.0.2/nrpe-4.0.2.tar.gz
               tar xzf nrpe-4.0.2.tar.gz && cd /home/ec2-user/nagios/nrpe-4.0.2 && ./configure
               make all && make install-plugin
+
+              #mysql_check
+              wget https://labs.consol.de/assets/downloads/nagios/check_mysql_health-2.2.2.tar.gz
+              tar xzf check_mysql_health-2.2.2.tar.gz && cd /home/ec2-user/nagios/check_mysql_health-2.2.2 && ./configure
+              make && make install
+              cd /home/ec2-user/nagios/check_mysql_health-2.2.2/plugins-scripts
+              mv -f check_mysql_health /usr/local/nagios/libexec
+              chown nagios:nagios check_mysql_health
+              chmod 755 check_mysql_health
 
               cd /usr/local/nagios/etc/objects/
               cp localhost.cfg redhat.cfg
@@ -295,7 +318,41 @@ Resources:
                   use                            local-service         ; Name of service template to use
                   host_name                      ubuntu
                   service_description            Network
-                  check_command                  check_aws_ec2!NetworkIn!Average!1600!3000
+                  check_command                  check_aws_ec2!NetworkIn!Average!16000!30000
+                  max_check_attempts             5
+
+              }
+              EOF"
+
+              ####mysql_health_check
+              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              define service {
+                  use                            local-service         ; Name of service template to use
+                  host_name                      ubuntu
+                  service_description            MySQL uptime
+                  check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!uptime
+                  max_check_attempts             5
+
+              }
+              EOF"
+
+              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              define service {
+                  use                            local-service         ; Name of service template to use
+                  host_name                      ubuntu
+                  service_description            MySQL Connections
+                  check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!threads-connected
+                  max_check_attempts             5
+
+              }
+              EOF"
+
+              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              define service {
+                  use                            local-service         ; Name of service template to use
+                  host_name                      ubuntu
+                  service_description            MySQL Files
+                  check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!open-files
                   max_check_attempts             5
 
               }
@@ -318,6 +375,7 @@ Resources:
             - REDHAT: !GetAtt NagiosHostRedhat.PublicIp
               WIN: !GetAtt NagiosHostWindows.PublicIp
               UBUNTU: !GetAtt NagiosHostUbuntu.PublicIp
+              MyDBURI: !GetAtt MyDatabaseServer.Endpoint.Address
 
       KeyName: !Ref KeyName
       ImageId: !FindInMap 
@@ -327,6 +385,37 @@ Resources:
       InstanceType: !Ref InstanceType
       SecurityGroupIds:
         - !GetAtt NagiosServerSecurityGroup.GroupId
+  
+  MyDBSecurityGroup:
+    Type: "AWS::RDS::DBSecurityGroup"
+    Properties:
+      DBSecurityGroupIngress: #required
+        - EC2SecurityGroupId: !GetAtt NagiosServerSecurityGroup.GroupId
+      GroupDescription: Security group for RDS DB Instance. #required
+
+  MyDatabaseServer:
+    Type: "AWS::RDS::DBInstance"
+    DeletionPolicy: Delete
+    Properties:
+      AllocatedStorage: "20"
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: db.t3.micro #required
+      DBName: phonebook
+      DeleteAutomatedBackups: true
+      DeletionProtection: false
+      DBSecurityGroups:
+        - !Ref MyDBSecurityGroup
+      Engine: MySQL
+      EngineVersion: 8.0.20
+      MasterUserPassword: !Ref DBPassword
+      MasterUsername: admin
+      MaxAllocatedStorage: 30
+      PreferredBackupWindow: 03:00-04:00
+      MultiAZ: true
+      Port: "3306"
+      VPCSecurityGroups:
+        - !Ref MyDBSecurityGroup
   
   NAGIOSSERVERIP:
     Type: AWS::EC2::EIP
