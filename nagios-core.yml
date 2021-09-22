@@ -400,7 +400,7 @@ Resources:
       AllocatedStorage: "20"
       AllowMajorVersionUpgrade: false
       AutoMinorVersionUpgrade: true
-      DBInstanceClass: db.t3.micro #required
+      DBInstanceClass: db.t2.micro #required
       DBName: phonebook
       DeleteAutomatedBackups: true
       DeletionProtection: false
@@ -412,7 +412,7 @@ Resources:
       MasterUsername: admin
       MaxAllocatedStorage: 30
       PreferredBackupWindow: 03:00-04:00
-      MultiAZ: true
+      MultiAZ: false
       Port: "3306"
       VPCSecurityGroups:
         - !Ref MyDBSecurityGroup
