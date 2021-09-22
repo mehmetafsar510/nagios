@@ -267,6 +267,7 @@ Resources:
               make all && make install-plugin
 
               #mysql_check
+              cd /home/ec2-user/nagios
               wget https://labs.consol.de/assets/downloads/nagios/check_mysql_health-2.2.2.tar.gz
               tar xzf check_mysql_health-2.2.2.tar.gz && cd /home/ec2-user/nagios/check_mysql_health-2.2.2 && ./configure
               make && make install
@@ -278,6 +279,7 @@ Resources:
               cd /usr/local/nagios/etc/objects/
               cp localhost.cfg redhat.cfg
               cp localhost.cfg ubuntu.cfg
+              cp localhost.cfg mysql.cfg
               cp windows.cfg windows10.cfg
 
               echo $(route -n) > routerip.txt
@@ -296,6 +298,10 @@ Resources:
               sed -i "s/localhost/ubuntu/g" ubuntu.cfg
               sed -i "s/127.0.0.1/${UBUNTU}/g" ubuntu.cfg
               sed -i '41,46d' ubuntu.cfg
+
+              sed -i "s/localhost/mysql/g" mysql.cfg
+              sed -i "s/127.0.0.1/${UBUNTU}/g" mysql.cfg
+              sed -i '41,46d' mysql.cfg
 
               #Aws-Cloudwatch-metrics
               wget https://raw.githubusercontent.com/mehmetafsar510/nagios/master/nagios-cloudwatch-metrics/command.txt
@@ -325,10 +331,10 @@ Resources:
               EOF"
 
               ####mysql_health_check
-              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              sh -c "cat >> /usr/local/nagios/etc/objects/mysql.cfg<< 'EOF'
               define service {
                   use                            local-service         ; Name of service template to use
-                  host_name                      ubuntu
+                  host_name                      mysql
                   service_description            MySQL uptime
                   check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!uptime
                   max_check_attempts             5
@@ -336,10 +342,10 @@ Resources:
               }
               EOF"
 
-              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              sh -c "cat >> /usr/local/nagios/etc/objects/mysql.cfg<< 'EOF'
               define service {
                   use                            local-service         ; Name of service template to use
-                  host_name                      ubuntu
+                  host_name                      mysql
                   service_description            MySQL Connections
                   check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!threads-connected
                   max_check_attempts             5
@@ -347,10 +353,10 @@ Resources:
               }
               EOF"
 
-              sh -c "cat >> /usr/local/nagios/etc/objects/ubuntu.cfg<< 'EOF'
+              sh -c "cat >> /usr/local/nagios/etc/objects/mysql.cfg<< 'EOF'
               define service {
                   use                            local-service         ; Name of service template to use
-                  host_name                      ubuntu
+                  host_name                      mysql
                   service_description            MySQL Files
                   check_command                  check_mysql_health!${MyDBURI}!3306!admin!${DBPassword}!open-files
                   max_check_attempts             5
