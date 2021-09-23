@@ -202,10 +202,10 @@ Resources:
           chkconfig nagios on
 
           # apache configuration for https redirect
-          #echo "RewriteEngine On" >>/etc/httpd/conf/httpd.conf
-          #echo "RewriteCond %{HTTPS} off" >>/etc/httpd/conf/httpd.conf
-          #echo "RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]" >>/etc/httpd/conf/httpd.conf
-          #systemctl restart httpd
+          echo "RewriteEngine On" >>/etc/httpd/conf/httpd.conf
+          echo "RewriteCond %{HTTPS} off" >>/etc/httpd/conf/httpd.conf
+          echo "RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]" >>/etc/httpd/conf/httpd.conf
+          systemctl restart httpd
 
       KeyName: !Ref KeyName
       ImageId: ami-001986d37ece5b4ab #ami-0001378efdafd5401
@@ -242,6 +242,23 @@ Resources:
           ./fullinstall -m -n
 
           systemctl restart httpd
+
+          # apache configuration for https redirect
+          sed -i 's/<\/VirtualHost>//g' /etc/httpd/conf.d/ssl.conf
+          cat << 'EOL' >> /etc/httpd/conf.d/ssl.conf
+          <IfModule mod_rewrite.c>
+          RewriteEngine on
+          RewriteCond $1 !^(index\.php|scripts|media|app|js|css|img|font|vendor|config.js)
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteCond %{REQUEST_FILENAME} !-d
+          RewriteRule nagioslogserver/(.*)$ /var/www/html/nagioslogserver/www/index.php/$1 [L,QSA]
+          </IfModule>
+
+          </VirtualHost>
+          EOL
+          echo "RewriteEngine On" >>/etc/httpd/conf/httpd.conf
+          echo "RewriteCond %{HTTPS} off" >>/etc/httpd/conf/httpd.conf
+          echo "RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}" >>/etc/httpd/conf/httpd.conf
 
       KeyName: !Ref KeyName
       ImageId: ami-001986d37ece5b4ab #ami-0001378efdafd5401
