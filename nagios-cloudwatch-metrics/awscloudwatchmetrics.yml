@@ -52,3 +52,37 @@ define service {
     max_check_attempts             5
 
 }
+
+
+
+
+-------------------------------
+download plugin https://exchange.nagios.org/directory/Plugins/Network-Protocols/LDAP/check_ldap/details
+cd /etc/services ###see ldap port
+yum search ldap
+
+yum install perl-LDAP -y
+
+perl check_ldap.pl
+
+mv -f check_ldap* /usr/local/nagios/libexec
+chown and chomd  check_ldap*
+####command.cfg
+define command {
+    command_name check_ldap
+    command_line $USER1$/check_ldap.pl -H $HOSTADDRESS$ -l $ARG1$ -x $ARG2$
+
+}
+
+
+####ubuntu.cfg
+
+define service {
+    use                            local-service         ; Name of service template to use
+    host_name                      ubuntu
+    service_description            LDAP
+    check_command                  check_ldap!cn=manager,dc=databit,cd=com!p@ssw0rd
+    max_check_attempts             5
+    notifications_enabled          1
+    contact groups                 nagiosadmin
+}
