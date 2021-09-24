@@ -56,7 +56,7 @@ define service {
 
 
 
--------------------------------
+####LDAP-metrics----------------------------
 download plugin https://exchange.nagios.org/directory/Plugins/Network-Protocols/LDAP/check_ldap/details
 cd /etc/services ###see ldap port
 yum search ldap
