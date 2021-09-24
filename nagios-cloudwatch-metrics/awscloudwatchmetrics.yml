@@ -75,7 +75,7 @@ define command {
 }
 
 
-####ubuntu.cfg
+#####ubuntu.cfg
 
 define service {
     use                            local-service         ; Name of service template to use
