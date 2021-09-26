@@ -201,7 +201,7 @@ Resources:
           chkconfig --add nagios
           chkconfig nagios on
 
-          # apache configuration for https redirect
+          #apache configuration for https redirect
           echo "RewriteEngine On" >>/etc/httpd/conf/httpd.conf
           echo "RewriteCond %{HTTPS} off" >>/etc/httpd/conf/httpd.conf
           echo "RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]" >>/etc/httpd/conf/httpd.conf
@@ -243,7 +243,7 @@ Resources:
 
           systemctl restart httpd
 
-          # apache configuration for https redirect
+          ##apache configuration for https redirect
           sed -i 's/<\/VirtualHost>//g' /etc/httpd/conf.d/ssl.conf
           cat << 'EOL' >> /etc/httpd/conf.d/ssl.conf
           <IfModule mod_rewrite.c>
