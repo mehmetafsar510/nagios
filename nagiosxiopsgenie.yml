@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  CloudFormation Template for NagiosXI and Nagios log on EC2.
+Parameters:
+  NagiosPassword:
+    AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Default: 'nagiosadmin'
+    Type: String
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.small
+      - t2.micro
+      - m1.small
+      - m1.medium
+      - m1.large
+    ConstraintDescription: must be a valid EC2 instance type.
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings:
+  RegionImageMap:
+    us-east-1:
+      AMI: ami-0c94855ba95c71c99
+    us-east-2:
+      AMI: ami-0603cbe34fd08cb81
+    us-west-1:
+      AMI: ami-0e65ed16c9bf1abc7
+    us-west-2:
+      AMI: ami-0841edc20334f9287
+    eu-west-1:
+      AMI: ami-08a2aed6e0a6f9c7d
+Resources:
+  NagiosServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: 'Nagios Access Security Group'
+      GroupDescription: 'Nagios Access Security Group'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5666'
+          ToPort: '5666'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5544'
+          ToPort: '5544'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: '0.0.0.0/0'
+      Tags:
+        - Key: Name
+          Value: Server RulesInbound
+
+  NagiosServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: NagiosXI
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          #config hostname
+          hostname nagios
+          echo "nagios" >/etc/hostname
+          cd /tmp/ 
+          wget http://assets.nagios.com/downloads/nagiosxi/xi-latest.tar.gz 
+          tar -zxf xi-latest.tar.gz
+          cd /tmp/nagiosxi/
+          ./fullinstall -n
+          chkconfig --add nagios
+          chkconfig nagios on
+          cd /tmp/
+          wget https://s3-us-west-2.amazonaws.com/opsgeniedownloads/repo/opsgenie-nagiosxi_2.21.0_all.deb
+          dpkg -i opsgenie-nagiosxi_2.21.0_all.deb
+      KeyName: !Ref KeyName
+      ImageId: ami-07d02ee1eeb0c996c #ami-0001378efdafd5401
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !GetAtt NagiosServerSecurityGroup.GroupId
+
+Outputs:
+  IPNagiosXI:
+    Description: Nagios XI IP
+    Value: !Join [ "", [ 'http://',!GetAtt NagiosServer.PublicIp, '/nagiosxi/' ]]
