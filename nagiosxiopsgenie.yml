@@ -2,6 +2,14 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: |
   CloudFormation Template for NagiosXI and Nagios log on EC2.
 Parameters:
+  NagiosUser:
+    AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Default: 'nagiosadmin'
+    Type: String
   NagiosPassword:
     AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
     ConstraintDescription: must contain only alphanumeric characters.
@@ -9,6 +17,14 @@ Parameters:
     MaxLength: '41'
     MinLength: '8'
     Default: 'nagiosadmin'
+    Type: String
+  ApiKey:
+    AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Default: 'xxxxxxxxxxxxxxx'
     Type: String
   InstanceType:
     Description: WebServer EC2 instance type
@@ -94,6 +110,9 @@ Resources:
           cd /home/admin
           wget https://github.com/opsgenie/oec-scripts/releases/download/NagiosXI-1.1.4_oec-1.1.3/opsgenie-nagiosxi_1.1.4_amd64.deb
           dpkg -i opsgenie-nagiosxi_1.1.4_amd64.deb
+          sed -i "s/<API_KEY>/${ApiKey}/g" /home/opsgenie/oec/conf/config.json
+          sed -i "s/nagiosadmin/${NagiosUser}/g" /home/opsgenie/oec/conf/config.json
+          sed -i "s/admin/${NagiosPassword}/g" /home/opsgenie/oec/conf/config.json
       KeyName: !Ref KeyName
       ImageId: ami-07d02ee1eeb0c996c #ami-0001378efdafd5401
       InstanceType: !Ref InstanceType
