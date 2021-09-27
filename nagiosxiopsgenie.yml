@@ -91,9 +91,9 @@ Resources:
           ./fullinstall -n
           chkconfig --add nagios
           chkconfig nagios on
-          cd /tmp/
-          wget https://s3-us-west-2.amazonaws.com/opsgeniedownloads/repo/opsgenie-nagiosxi_2.21.0_all.deb
-          dpkg -i opsgenie-nagiosxi_2.21.0_all.deb
+          cd /home/admin
+          wget https://github.com/opsgenie/oec-scripts/releases/download/NagiosXI-1.1.4_oec-1.1.3/opsgenie-nagiosxi_1.1.4_amd64.deb
+          dpkg -i opsgenie-nagiosxi_1.1.4_amd64.deb
       KeyName: !Ref KeyName
       ImageId: ami-07d02ee1eeb0c996c #ami-0001378efdafd5401
       InstanceType: !Ref InstanceType
