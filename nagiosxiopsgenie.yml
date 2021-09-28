@@ -11,8 +11,6 @@ Parameters:
     Default: 'nagiosadmin'
     Type: String
   NagiosPassword:
-    AllowedPattern: '^[A-Za-z][a-zA-Z0-9@%$_-]{8,41}$'
-    ConstraintDescription: must contain only alphanumeric characters.
     Description: The WordPress database admin account password
     MaxLength: '41'
     MinLength: '8'
