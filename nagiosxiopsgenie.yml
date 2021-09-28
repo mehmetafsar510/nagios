@@ -142,7 +142,7 @@ Resources:
           dpkg -i opsgenie-nagiosxi_1.1.4_amd64.deb
           sed -i "s/<API_KEY>/${ApiKey}/g" /home/opsgenie/oec/conf/config.json
           sed -i "s/nagiosadmin/${NagiosUser}/g" /home/opsgenie/oec/conf/config.json
-          sed -i "s/admin/${NagiosPassword}/g" /home/opsgenie/oec/conf/config.json
+          sed -i 's/"admin"/"${NagiosPassword}"/g' /home/opsgenie/oec/conf/config.json
       KeyName: !Ref KeyName
       ImageId: ami-07d02ee1eeb0c996c #ami-0001378efdafd5401
       InstanceType: !Ref InstanceType
